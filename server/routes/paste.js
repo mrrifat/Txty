@@ -3,16 +3,41 @@ import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
 import db from '../db/init.js';
 import { authenticateToken, requireAuth } from '../middleware/auth.js';
+import { pasteCreationLimiter, unlockLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Create paste
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', pasteCreationLimiter, authenticateToken, async (req, res) => {
   try {
     const { title, content, password, expiresIn } = req.body;
 
+    // Validate content
     if (!content) {
       return res.status(400).json({ error: 'Content is required' });
+    }
+
+    if (typeof content !== 'string') {
+      return res.status(400).json({ error: 'Content must be a string' });
+    }
+
+    if (content.length > 1000000) { // 1MB limit
+      return res.status(400).json({ error: 'Content is too large (max 1MB)' });
+    }
+
+    // Validate title
+    if (title && typeof title !== 'string') {
+      return res.status(400).json({ error: 'Title must be a string' });
+    }
+
+    if (title && title.length > 200) {
+      return res.status(400).json({ error: 'Title is too long (max 200 characters)' });
+    }
+
+    // Validate expiresIn
+    const validExpirations = ['1h', '1d', '7d', '30d', 'never'];
+    if (expiresIn && !validExpirations.includes(expiresIn)) {
+      return res.status(400).json({ error: 'Invalid expiration time' });
     }
 
     const id = nanoid(10);
@@ -68,14 +93,15 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Paste not found' });
     }
 
-    // Check if expired
+    // Check if expired before incrementing views
     if (paste.expires_at && new Date(paste.expires_at) < new Date()) {
       db.prepare('DELETE FROM pastes WHERE id = ?').run(id);
       return res.status(404).json({ error: 'Paste has expired' });
     }
 
-    // Increment view count
+    // Increment view count only for valid pastes
     db.prepare('UPDATE pastes SET views = views + 1 WHERE id = ?').run(id);
+    paste.views += 1; // Update local copy to reflect new count
 
     // If password protected, don't send content yet
     if (paste.password) {
@@ -83,7 +109,7 @@ router.get('/:id', async (req, res) => {
         id: paste.id,
         title: paste.title,
         created_at: paste.created_at,
-        views: paste.views + 1,
+        views: paste.views,
         passwordProtected: true
       });
     }
@@ -93,7 +119,7 @@ router.get('/:id', async (req, res) => {
       title: paste.title,
       content: paste.content,
       created_at: paste.created_at,
-      views: paste.views + 1,
+      views: paste.views,
       passwordProtected: false
     });
   } catch (error) {
@@ -103,7 +129,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Unlock password-protected paste
-router.post('/:id/unlock', async (req, res) => {
+router.post('/:id/unlock', unlockLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { password } = req.body;
