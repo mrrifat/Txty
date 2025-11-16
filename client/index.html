@@ -2,12 +2,63 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Primary Meta Tags -->
+    <title>Txty - Secure Pastebin & Code Sharing Platform | Syntax Highlighting for 20+ Languages</title>
+    <meta name="title" content="Txty - Secure Pastebin & Code Sharing Platform" />
+    <meta name="description" content="Share code snippets & text securely with Txty. Features syntax highlighting for 20+ languages, burn-after-reading, custom URLs, and advanced analytics. Free pastebin alternative to GitHub Gist." />
+    <meta name="keywords" content="pastebin, code sharing, snippet sharing, syntax highlighting, code collaboration, paste tool, developer tools, github gist alternative, text sharing, markdown editor, burn after reading" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="theme-color" content="#0284c7" />
+    <meta name="author" content="Txty" />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Txty - Share Text Instantly</title>
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://www.gravatar.com" />
+    <link rel="dns-prefetch" href="https://www.gravatar.com" />
+
+    <!-- PWA -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Txty" />
+
+    <!-- Performance hints -->
+    <link rel="preload" as="style" href="/src/index.css" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Txty",
+      "description": "Secure pastebin and code sharing platform with syntax highlighting",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Syntax highlighting for 20+ programming languages",
+        "Burn-after-reading functionality",
+        "Custom URLs",
+        "Password protection",
+        "Advanced analytics",
+        "Dark mode",
+        "QR code generation",
+        "Paste forking",
+        "Tag system",
+        "Folder organization"
+      ]
+    }
+    </script>
   </body>
 </html>
