@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../db/init.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+import { authenticateToken, requireAuth } from '../middleware/auth.js';
+import { getGravatarUrl } from '../utils/gravatar.js';
 
 const router = express.Router();
 
@@ -66,9 +68,11 @@ router.post('/register', authLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const avatarUrl = getGravatarUrl(email);
+
     res.json({
       token,
-      user: { id: result.lastInsertRowid, username, email }
+      user: { id: result.lastInsertRowid, username, email, avatarUrl }
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -108,14 +112,77 @@ router.post('/login', authLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const avatarUrl = getGravatarUrl(user.email);
+
     res.json({
       token,
-      user: { id: user.id, username: user.username, email: user.email }
+      user: { id: user.id, username: user.username, email: user.email, avatarUrl, bio: user.bio }
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to login' });
   }
+});
+
+// Get user profile
+router.get('/profile/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = db.prepare('SELECT id, username, email, bio, created_at FROM users WHERE username = ?').get(username);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const avatarUrl = getGravatarUrl(user.email);
+    const pasteCount = db.prepare('SELECT COUNT(*) as count FROM pastes WHERE user_id = ? AND is_public = 1').get(user.id).count;
+    const totalViews = db.prepare('SELECT SUM(views) as total FROM pastes WHERE user_id = ?').get(user.id).total || 0;
+
+    res.json({
+      username: user.username,
+      bio: user.bio,
+      avatarUrl,
+      createdAt: user.created_at,
+      stats: {
+        pastes: pasteCount,
+        totalViews
+      }
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Failed to get profile' });
+  }
+});
+
+// Update user profile
+router.patch('/profile', authenticateToken, requireAuth, async (req, res) => {
+  try {
+    const { bio } = req.body;
+
+    if (bio && bio.length > 500) {
+      return res.status(400).json({ error: 'Bio must be 500 characters or less' });
+    }
+
+    db.prepare('UPDATE users SET bio = ? WHERE id = ?').run(bio || null, req.user.id);
+
+    const user = db.prepare('SELECT id, username, email, bio FROM users WHERE id = ?').get(req.user.id);
+    const avatarUrl = getGravatarUrl(user.email);
+
+    res.json({
+      user: { ...user, avatarUrl },
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Get Gravatar URL
+router.get('/gravatar', (req, res) => {
+  const { email } = req.query;
+  const avatarUrl = getGravatarUrl(email);
+  res.json({ avatarUrl });
 });
 
 export default router;

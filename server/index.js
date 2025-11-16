@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import authRoutes from './routes/auth.js';
 import pasteRoutes from './routes/paste.js';
+import sitemapRoutes from './routes/sitemap.js';
 import { initDatabase } from './db/init.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { startCleanupJob } from './utils/cleanup.js';
@@ -31,7 +32,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Apply general rate limiter to all API routes
 app.use('/api/', generalLimiter);
 
-// Routes
+// SEO Routes (before API routes to handle sitemap/robots)
+app.use('/', sitemapRoutes);
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/paste', pasteRoutes);
 
