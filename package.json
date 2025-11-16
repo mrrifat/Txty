@@ -10,7 +10,9 @@
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "start": "node server/index.js",
-    "install-all": "npm install && cd client && npm install"
+    "install-all": "npm install && cd client && npm install",
+    "health": "node server/healthcheck.js",
+    "test": "npm run health && npm run build"
   },
   "keywords": [
     "paste",
