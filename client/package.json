@@ -19,6 +19,7 @@
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.20.1",
+    "recharts": "^3.4.1",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1"
   },

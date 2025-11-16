@@ -19,6 +19,12 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center space-x-4">
+            <Link
+              to="/explore"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
+              Explore
+            </Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
