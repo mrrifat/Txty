@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  txty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: txty-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+      # Optional: Mount custom .env file
+      - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - txty-network
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: txty-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./client/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - txty
+    networks:
+      - txty-network
+    profiles:
+      - with-nginx
+
+networks:
+  txty-network:
+    driver: bridge
+
+volumes:
+  txty-data:
+    driver: local

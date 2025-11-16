@@ -13,3 +13,20 @@ coverage/
 *.swo
 *~
 .cache/
+
+# Database
+data/
+*.db-shm
+*.db-wal
+
+# SSL Certificates
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Docker volumes
+docker-volumes/
+
+# Backups
+*.backup
+backup/
